@@ -4,8 +4,7 @@ image:
 service:
   type: NodePort
   edgeService:
-    name: edge
-    targetPort: 4566
+    type: NodePort
     nodePort: 30066
 
 startServices: "s3,sqs,dynamodb,lambda,iam,sts,cloudwatch,logs,ec2"
