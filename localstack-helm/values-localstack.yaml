@@ -7,7 +7,7 @@ service:
     type: NodePort
     nodePort: 30066
 
-startServices: "s3,sqs,dynamodb,lambda,iam,sts,cloudwatch,logs,ec2"
+startServices: "s3,sqs,sns,dynamodb,lambda,iam,sts,cloudwatch,logs,ec2,apigatewayv2,secretsmanager,cognito-identity,cognito-idp,events"
 
 enableStartupScripts: false
 
