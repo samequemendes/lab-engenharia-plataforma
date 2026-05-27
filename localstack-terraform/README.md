@@ -1,25 +1,30 @@
 # LocalStack + Terraform Lab
 
-Laboratório básico para provisionamento local de recursos AWS utilizando **LocalStack** + **Terraform**.
+Guia operacional para provisionar recursos AWS locais usando **LocalStack** e **Terraform**.
 
-## Objetivo
-
-Este laboratório cria localmente:
-
-- 1 Bucket S3
-- 1 Tabela DynamoDB
-
-Tudo executando localmente via LocalStack, sem custos na AWS.
+Este README é o passo a passo prático do laboratório. Para entender o conceito completo, a arquitetura e o raciocínio por trás do lab, leia:  
+👉 [Explicação completa do laboratório](../labs/lab-localstack-terraform_validado.md)
 
 ---
 
-# Arquitetura
+## 1. Objetivo
+
+Provisionar localmente:
+
+- Um bucket S3.
+- Uma tabela DynamoDB.
+
+Tudo será criado dentro do LocalStack, sem custo na AWS real.
+
+---
+
+## 2. Arquitetura resumida
 
 ```text
 Terraform
    |
    v
-LocalStack (Docker)
+LocalStack na porta 4566
    |
    +--> S3
    |
@@ -28,13 +33,9 @@ LocalStack (Docker)
 
 ---
 
-# Pré-requisitos
+## 3. Pré-requisitos
 
-## Docker
-## Terraform
-## AWS CLI
-
-Verifique:
+Valide as ferramentas:
 
 ```bash
 docker --version
@@ -42,8 +43,7 @@ terraform version
 aws --version
 ```
 
-
-# Instalação do LocalStack
+Instale o LocalStack CLI, caso ainda não tenha:
 
 ```bash
 pipx install localstack
@@ -51,55 +51,53 @@ pipx install localstack
 
 ---
 
-# Configuração do Token (opcional)
+## 4. Configurar autenticação do LocalStack
 
-Se você estiver usando LocalStack Pro/Enterprise ou se o CLI solicitar, execute:
-
-ATENÇÃO: Localize seu token ao clicar na url de acesso ao Localstack
-
-```bash
-
-     __                     _______ __             __
-    / /   ____  _________ _/ / ___// /_____ ______/ /__
-   / /   / __ \/ ___/ __ `/ /\__ \/ __/ __ `/ ___/ //_/
-  / /___/ /_/ / /__/ /_/ / /___/ / /_/ /_/ / /__/ ,<
- /_____/\____/\___/\__,_/_//____/\__/\__,_/\___/_/|_|
-
-- LocalStack CLI: 2026.3.0
-- Profile: default
-- App: https://app.localstack.cloud
-
-[12:20:08] starting LocalStack in Docker mode 🐳    
-```
-
+Se o LocalStack solicitar autenticação, configure seu token:
 
 ```bash
 localstack auth set-token SEU_TOKEN
 ```
 
+Você pode obter o token no painel do LocalStack:
+
+```text
+https://app.localstack.cloud
+```
+
+> Não versione tokens, credenciais reais ou qualquer segredo no Git.
+
 ---
 
-# Subindo o LocalStack
+## 5. Subir o LocalStack
+
+Inicie o LocalStack em background:
 
 ```bash
 localstack start -d
 ```
 
----
-
-# Validar funcionamento
+Valide se o container está rodando:
 
 ```bash
 docker ps | grep localstack
 ```
 
+Valide o health check:
+
 ```bash
 curl http://localhost:4566/_localstack/health
 ```
 
+Se retornar um JSON, o ambiente está pronto.
+
 ---
 
-# Configuração AWS CLI
+## 6. Configurar AWS CLI
+
+Mesmo usando ambiente local, a AWS CLI precisa de credenciais.
+
+Use credenciais fake:
 
 ```bash
 aws configure set aws_access_key_id test
@@ -108,24 +106,32 @@ aws configure set region us-east-1
 aws configure set output json
 ```
 
+Teste a conexão:
+
+```bash
+aws --endpoint-url=http://localhost:4566 s3 ls
+```
+
 ---
 
-# Estrutura do Projeto
+## 7. Estrutura do projeto
 
 ```text
 localstack-terraform/
+├── README_validado.md
 ├── main.tf
 ├── outputs.tf
 ├── terraform.tf
 ├── terraform.tfvars
 ├── variables.tf
-├── versions.tf
-└── README.md
+└── versions.tf
 ```
 
 ---
 
-# Provider Terraform
+## 8. Provider Terraform
+
+O arquivo `terraform.tf` deve configurar o provider AWS apontando para o LocalStack.
 
 ```hcl
 provider "aws" {
@@ -145,11 +151,17 @@ provider "aws" {
 }
 ```
 
+### Por que isso é importante?
+
+Sem essa configuração, o Terraform tentaria falar com a AWS real.
+
+Com essa configuração, ele envia as chamadas para o LocalStack.
+
 ---
 
-# Recursos Criados
+## 9. Recursos provisionados
 
-## S3 Bucket
+### S3 Bucket
 
 ```hcl
 resource "aws_s3_bucket" "lab" {
@@ -157,7 +169,7 @@ resource "aws_s3_bucket" "lab" {
 }
 ```
 
-## DynamoDB
+### DynamoDB
 
 ```hcl
 resource "aws_dynamodb_table" "lab_users" {
@@ -174,82 +186,129 @@ resource "aws_dynamodb_table" "lab_users" {
 
 ---
 
-# Inicialização Terraform
+## 10. Executar Terraform
+
+Inicialize:
 
 ```bash
 terraform init
-terraform validate
+```
+
+Formate:
+
+```bash
 terraform fmt -recursive
+```
+
+Valide:
+
+```bash
+terraform validate
+```
+
+Planeje:
+
+```bash
 terraform plan
+```
+
+Aplique:
+
+```bash
 terraform apply -auto-approve
 ```
 
 ---
 
-# Testes
+## 11. Testar S3
 
-## Listar buckets
+Listar buckets:
 
 ```bash
 aws --endpoint-url=http://localhost:4566 s3 ls
 ```
 
-## Upload arquivo
+Criar arquivo de teste:
 
 ```bash
 echo "teste localstack" > teste.txt
-
-aws --endpoint-url=http://localhost:4566 \
-s3 cp teste.txt s3://localstack-lab-dev-bucket/teste.txt
 ```
 
-## Listar arquivos
+Fazer upload:
 
 ```bash
 aws --endpoint-url=http://localhost:4566 \
-s3 ls s3://localstack-lab-dev-bucket
+  s3 cp teste.txt s3://localstack-lab-dev-bucket/teste.txt
 ```
 
-## Listar tabelas DynamoDB
+Listar arquivos no bucket:
 
 ```bash
 aws --endpoint-url=http://localhost:4566 \
-dynamodb list-tables
-```
-
-## Inserir item
-
-```bash
-aws --endpoint-url=http://localhost:4566 \
-dynamodb put-item \
---table-name localstack-lab-dev-users \
---item '{
-  "id": {"S": "1"},
-  "name": {"S": "Sameque"},
-  "role": {"S": "Platform Engineer"}
-}'
-```
-
-## Buscar item
-
-```bash
-aws --endpoint-url=http://localhost:4566 \
-dynamodb get-item \
---table-name localstack-lab-dev-users \
---key '{"id": {"S": "1"}}'
+  s3 ls s3://localstack-lab-dev-bucket
 ```
 
 ---
 
-# Destroy
+## 12. Testar DynamoDB
+
+Listar tabelas:
+
+```bash
+aws --endpoint-url=http://localhost:4566 \
+  dynamodb list-tables
+```
+
+Inserir item:
+
+```bash
+aws --endpoint-url=http://localhost:4566 \
+  dynamodb put-item \
+  --table-name localstack-lab-dev-users \
+  --item '{
+    "id": {"S": "1"},
+    "name": {"S": "Sameque"},
+    "role": {"S": "Platform Engineer"}
+  }'
+```
+
+Buscar item:
+
+```bash
+aws --endpoint-url=http://localhost:4566 \
+  dynamodb get-item \
+  --table-name localstack-lab-dev-users \
+  --key '{"id": {"S": "1"}}'
+```
+
+---
+
+## 13. Outputs do Terraform
+
+Depois do apply, consulte as saídas:
+
+```bash
+terraform output
+```
+
+Se os outputs estiverem configurados, você pode recuperar nomes de recursos assim:
+
+```bash
+terraform output -raw s3_bucket_name
+terraform output -raw dynamodb_table_name
+```
+
+---
+
+## 14. Destroy
+
+Remova os recursos criados pelo Terraform:
 
 ```bash
 terraform destroy -auto-approve
 ```
 
----
-
-# Parar LocalStack
+Pare o LocalStack:
 
 ```bash
 localstack stop
@@ -257,42 +316,85 @@ localstack stop
 
 ---
 
-# Troubleshooting
+## 15. Troubleshooting
 
-## Credenciais AWS
+### AWS CLI sem credenciais
+
+Erro comum:
+
+```text
+Unable to locate credentials
+```
+
+Solução:
 
 ```bash
 aws configure set aws_access_key_id test
 aws configure set aws_secret_access_key test
+aws configure set region us-east-1
 ```
 
-## Logs
+### LocalStack não responde
+
+Verifique o container:
+
+```bash
+docker ps | grep localstack
+```
+
+Verifique logs:
 
 ```bash
 docker logs localstack-main --tail 100
 ```
 
----
+### Health check falhou
 
-# Próximos passos
+Teste novamente:
 
-- Lambda
-- API Gateway
-- SNS
-- SQS
-- EventBridge
-- Step Functions
-- ECS
-- Athena
-- Glue
-- Terraform Modules
-- Azure DevOps CI/CD
-- Backstage + LocalStack
+```bash
+curl http://localhost:4566/_localstack/health
+```
+
+Se continuar falhando, reinicie:
+
+```bash
+localstack stop
+localstack start -d
+```
 
 ---
 
-# Referências
+## 16. Boas práticas
 
-- https://docs.localstack.cloud/
-- https://developer.hashicorp.com/terraform/docs
-- https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+- Nunca use credenciais reais em labs locais.
+- Sempre use `--endpoint-url=http://localhost:4566` ao testar via AWS CLI.
+- Rode `terraform fmt -recursive` antes de versionar.
+- Rode `terraform validate` antes de aplicar.
+- Separe documentação conceitual de documentação operacional.
+- Use nomes previsíveis para facilitar troubleshooting.
+- Destrua recursos quando terminar o teste.
+
+---
+
+## 17. Próximas evoluções
+
+Este lab pode virar base para:
+
+- Lambda + API Gateway.
+- S3 event notifications.
+- DynamoDB Streams.
+- SQS e SNS.
+- EventBridge.
+- Testes automatizados.
+- Módulos Terraform reutilizáveis.
+- Pipeline CI/CD no Azure DevOps.
+- Templates Backstage para criação de serviços.
+
+---
+
+## 18. Referências
+
+- [Documentação LocalStack](https://docs.localstack.cloud/)
+- [Documentação Terraform](https://developer.hashicorp.com/terraform/docs)
+- [AWS Provider Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
