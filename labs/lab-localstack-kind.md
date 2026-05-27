@@ -483,3 +483,9 @@ Esse modelo é uma boa base para evoluir para:
 - testes automatizados de infraestrutura;
 - simulação de serviços AWS em ambiente local;
 - padronização de ambientes de desenvolvimento para times de plataforma.
+
+## Criação do cluster Kind
+
+```bash
+kind create cluster --name kind-2 --image kindest/node:v1.34.0 --wait 5m
+```

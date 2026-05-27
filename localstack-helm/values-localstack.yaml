@@ -1,0 +1,21 @@
+image:
+  tag: latest
+
+service:
+  type: NodePort
+  edgeService:
+    name: edge
+    targetPort: 4566
+    nodePort: 30066
+
+startServices: "s3,sqs,dynamodb,lambda,iam,sts,cloudwatch,logs,ec2"
+
+enableStartupScripts: false
+
+debug: true
+
+extraEnvVars:
+  - name: LOCALSTACK_AUTH_TOKEN
+    value: "ls-VeHAXOqU-YoLu-2004-TOvI-zuhiqaDOffef"
+  - name: DEBUG
+    value: "1"
