@@ -31,26 +31,17 @@ LocalStack (Docker)
 # Pré-requisitos
 
 ## Docker
+## Terraform
+## AWS CLI
 
 Verifique:
 
 ```bash
 docker --version
-```
-
-## Terraform
-
-```bash
 terraform version
-```
-
-## AWS CLI
-
-```bash
 aws --version
 ```
 
----
 
 # Instalação do LocalStack
 
@@ -63,6 +54,24 @@ pipx install localstack
 # Configuração do Token (opcional)
 
 Se você estiver usando LocalStack Pro/Enterprise ou se o CLI solicitar, execute:
+
+ATENÇÃO: Localize seu token ao clicar na url de acesso ao Localstack
+
+```bash
+
+     __                     _______ __             __
+    / /   ____  _________ _/ / ___// /_____ ______/ /__
+   / /   / __ \/ ___/ __ `/ /\__ \/ __/ __ `/ ___/ //_/
+  / /___/ /_/ / /__/ /_/ / /___/ / /_/ /_/ / /__/ ,<
+ /_____/\____/\___/\__,_/_//____/\__/\__,_/\___/_/|_|
+
+- LocalStack CLI: 2026.3.0
+- Profile: default
+- App: https://app.localstack.cloud
+
+[12:20:08] starting LocalStack in Docker mode 🐳    
+```
+
 
 ```bash
 localstack auth set-token SEU_TOKEN
