@@ -18,3 +18,15 @@ extraEnvVars:
     value: "ls-VeHAXOqU-YoLu-2004-TOvI-zuhiqaDOffef"
   - name: DEBUG
     value: "1"
+  - name: DOCKER_HOST
+    value: "unix:///var/run/docker.sock"
+
+volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+
+volumeMounts:
+  - name: docker-sock
+    mountPath: /var/run/docker.sock
